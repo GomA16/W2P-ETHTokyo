@@ -1,4 +1,7 @@
 import { blake2s } from "@noble/hashes/blake2";
+import { UltraHonkBackend } from '@aztec/bb.js';
+import { Noir } from '@noir-lang/noir_js';
+import  testCircuit from "../circuits/testCircuit/target/testCircuit.json";
 
 function numberToUint8Array (num: number) {
     const buffer = new ArrayBuffer(32);
@@ -15,8 +18,31 @@ async function genHash () {
     console.log("y",y)
 }
 
+async function testProof () {
+    const noir = new Noir(testCircuit);
+    const backend = new UltraHonkBackend(testCircuit.bytecode);
+    const {witness} = await noir.execute({x : [
+  0, 1, 226, 64, 0, 0, 0, 0, 0,
+  0, 0,   0,  0, 0, 0, 0, 0, 0,
+  0, 0,   0,  0, 0, 0, 0, 0, 0,
+  0, 0,   0,  0, 0
+],
+y: [
+  38, 188, 186,  60,  72, 102, 135, 156,
+  46, 114,  41, 157, 252,  41, 153, 112,
+  93, 130, 209, 199, 144,   8,  39,  44,
+  31,  86, 104, 212, 162,  20, 237,  81
+]});
+    const proof = await backend.generateProof(witness);
+    console.log("proof:", proof);
+    console.log("proof.proof: ", proof.proof)
+
+}
+
+
 async function main () {
-    await genHash();
+    // await genHash();
+    await testProof();
 }
 
 main()

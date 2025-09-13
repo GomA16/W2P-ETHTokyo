@@ -9,7 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@aztec/bb.js": "^1.2.1",
     "@noble/hashes": "^2.0.0",
+    "@noir-lang/noir_js": "^1.0.0-beta.11",
     "next": "15.5.3",
     "react": "19.1.0",
     "react-dom": "19.1.0"

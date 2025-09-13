@@ -37,6 +37,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var blake2_1 = require("@noble/hashes/blake2");
+var noir_js_1 = require("@noir-lang/noir_js");
+var bb_js_1 = require("@aztec/bb.js");
+var testCircuit_json_1 = require("../circuits/testCircuit/target/testCircuit.json");
 function numberToUint8Array(num) {
     var buffer = new ArrayBuffer(32);
     var view = new DataView(buffer);
@@ -56,12 +59,25 @@ function genHash() {
         });
     });
 }
+function testProof() {
+    return __awaiter(this, void 0, void 0, function () {
+        var noir, backend;
+        return __generator(this, function (_a) {
+            noir = new noir_js_1.Noir(testCircuit_json_1.default);
+            backend = new bb_js_1.UltraHonkBackend(testCircuit_json_1.default.bytecode);
+            return [2 /*return*/];
+        });
+    });
+}
 function main() {
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, genHash()];
+                case 0: 
+                // await genHash();
+                return [4 /*yield*/, testProof()];
                 case 1:
+                    // await genHash();
                     _a.sent();
                     return [2 /*return*/];
             }
