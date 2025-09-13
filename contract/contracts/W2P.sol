@@ -11,14 +11,6 @@ contract W2P {
 
     mapping(address => uint256) public depositInfo;
 
-    struct LoanInfo {
-        uint id;
-        address borroweAddress;
-        uint256 borrowedETH;
-        uint256 repayLimit;
-    }
-    mapping(address => LoanInfo[]) LoanList;
-
     event Deposit(address indexed from, uint256 value);
 
     function deposit() external payable {
@@ -45,6 +37,15 @@ contract W2P {
     }
 
     // ここから先がzk必要な部分
+
+    struct LoanInfo {
+        uint id;
+        address borroweAddress;
+        uint256 borrowedETH;
+        uint256 repayLimit;
+        bool isRepaid;
+    }
+    mapping(address => LoanInfo[]) LoanList;
 
     TestCircuitHonkVerifier verifier;
 
