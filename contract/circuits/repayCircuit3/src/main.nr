@@ -1,15 +1,14 @@
 use keccak256::keccak256;
 
 fn increment_bytes32(input: [u8;32]) -> [u8;32] {
-    let mut out: [u8;32] = input;
-    let mut carry: u8 = 1;
-
-    for i in 0..32 {
-        let sum: u16 = input[i] as u16 + carry as u16;
-        out[i] = (sum & 0xFF) as u8;
-        carry = if sum > 0xFF { 1 } else { 0 };
+    let mut out = input;
+    let mut carry: u16 = 1;
+    for r in 0..32 {
+        let idx = 31 - r;
+        let sum: u16 = (out[idx] as u16) + carry;
+        out[idx] = (sum & 0xFF) as u8;
+        carry = sum >> 8;
     }
-
     out
 }
 
