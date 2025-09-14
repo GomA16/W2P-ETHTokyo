@@ -23,7 +23,7 @@ async function main (){
     const tx = await honkVerifier.verify(proofBytes
         ,proofInputs
     );
-    console.log("proof is", tx ? "valid": "invalid");
+    console.log("proof is", tx ? "valid" : "invalid");
 }
 
 main()

@@ -38,23 +38,34 @@ contract W2P {
 
     // ここから先がzk必要な部分
 
-    uint256[32] loanState;
-    uint256[32] loanExpired;
+    bytes32[32] loanState;
+    uint256 loanStateIndex;
+    bytes32[32] loanExpired;
+    uint256 loanExpiredIndex;
+    bytes32[32] nfStatesList;
+    uint256 nfStateIndex;
+    uint256 step;
 
-    struct LoanInfo {
-        uint256 id;
-        address borroweAddress;
-        uint256 borrowedETH;
-        uint256 repayLimit;
-        bool isRepaid;
+    function incrStep() external {
+        step++;
     }
 
-    mapping(address => LoanInfo[]) LoanList;
+    struct LoanInfo {
+        bytes32 id;
+        uint256 date;
+        bool alive;
+    }
+
+    LoanInfo[] LoanList;
 
     TestCircuitHonkVerifier verifier;
 
     constructor() {
         verifier = new TestCircuitHonkVerifier();
+        loanStateIndex = 0;
+        loanExpiredIndex = 0;
+        nfStateIndex = 0;
+        step = 0;
     }
 
     event ZKProofPassed(address indexed userAddress, bool isValid);
@@ -68,15 +79,42 @@ contract W2P {
         return isValid;
     }
 
-    function lend() external payable {
+    event Lend(address indexed _address, uint256 _amount);
+
+    function lend(
+        uint256 _amount,
+        bytes32 nextState,
+        bytes32 nextNFState,
+        bytes32 nextLoanId
+    ) external payable {
         // loanStateとloanExpiredを送る
         // 証明を検証する
         // msg.senderにethcapを送る
+        loanState[loanStateIndex++] = nextState;
+        nfStatesList[nfStateIndex++] = nextNFState;
+        LoanList.push(LoanInfo({id: nextLoanId, date: step, alive: false}));
+        (bool success, ) = msg.sender.call{value: _amount}("");
+        require(success, "Failed to send Ether");
+        pooledETH -= _amount;
+        step++;
+        emit Lend(msg.sender, _amount);
     }
 
-    function repay() external payable {
+    function repay(bytes32 nextState, bytes32 nextNFState) external payable {
         // loanStateを送る
         // 証明を検証する
-        //
+        loanState[loanStateIndex++] = nextState;
+        nfStatesList[nfStateIndex++] = nextNFState;
+        pooledETH += msg.value;
+        step++;
+    }
+
+    function checkExpire() external {
+        for (uint i = 0; i < loanState.length; i++) {
+            if (step - LoanList[i].date > 3 && LoanList[i].alive) {
+                loanExpired[loanExpiredIndex++] = LoanList[i].id;
+                LoanList[i].alive = false;
+            }
+        }
     }
 }

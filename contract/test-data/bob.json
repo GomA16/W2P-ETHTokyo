@@ -1,0 +1,11 @@
+{
+    "message" : {
+    "name" : "Bob",
+    "my_number" : "252525",
+    "income" : 120000,
+    "years_of_service" : 25,
+    "c_s" : "0xb2239c4272e852842bb8f22d7ffa635ae9087de4518a4a249bd19e7e0ad244e7"
+    }, 
+    "sig" : "0x11",
+    "pk" : "0x04fef325daab1c254678a592034c2c34543618b83da8e1fd3f55c0c7b54148e45e8663fa8e6eef1874e587d0a7cb401c15d7fd4cd13e847251842b707265dd33ff"
+}

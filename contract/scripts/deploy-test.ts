@@ -2,7 +2,6 @@ import { ethers } from "hardhat";
 import { UltraHonkBackend } from '@aztec/bb.js';
 import { Noir } from '@noir-lang/noir_js';
 import circuit from "./circuit/target/circuit.json";
-import { BytesLike } from "ethers";
 import { bytesToHex } from "@noble/hashes/utils";
 import circuitProofData from "./circuitProof.json";
 

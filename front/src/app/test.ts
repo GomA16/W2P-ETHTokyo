@@ -16,17 +16,9 @@ function numberToUint8Array (num: number) {
     return uint8Array;
 }
 function stringToUint8Array(input: string): Uint8Array {
-  // 1. 文字列をUTF-8のバイト配列にエンコードする
   const encodedString = new TextEncoder().encode(input);
-
-  // 2. 32バイトのゼロで埋められた結果用の配列を作成する
   const result = new Uint8Array(32);
-
-  // 3. エンコードしたデータを結果用配列の先頭からコピーする
-  //    - encodedStringが32バイトより短い場合、残りは0のまま（パディング）
-  //    - encodedStringが32バイトより長い場合、最初の32バイトだけがコピーされる（切り捨て）
   result.set(encodedString.slice(0, 32));
-
   return result;
 }
 async function testEthersECDSA() {
