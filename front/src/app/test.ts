@@ -8,7 +8,7 @@ import * as secp from '@noble/secp256k1';
 import { ethers } from 'ethers';
 
 
-function numberToUint8Array (num: number) {
+function numberToUint8Array (num: number): Uint8Array {
     const buffer = new ArrayBuffer(32);
     const view = new DataView(buffer);
     view.setUint32(0, num, false);
@@ -172,21 +172,19 @@ async function genKeccak () {
 async function testProof () {
     const noir = new Noir(testCircuit as any);
     const backend = new UltraHonkBackend(testCircuit.bytecode);
-    const {witness} = await noir.execute({x : [
-  0, 1, 226, 64, 0, 0, 0, 0, 0,
-  0, 0,   0,  0, 0, 0, 0, 0, 0,
-  0, 0,   0,  0, 0, 0, 0, 0, 0,
-  0, 0,   0,  0, 0
-],
-y: [
-  38, 188, 186,  60,  72, 102, 135, 156,
-  46, 114,  41, 157, 252,  41, 153, 112,
-  93, 130, 209, 199, 144,   8,  39,  44,
-  31,  86, 104, 212, 162,  20, 237,  81
-]});
+    const { witness } = await noir.execute({
+        x: Array.from(numberToUint8Array(1)),
+        y: [
+            Array.from(numberToUint8Array(1)),
+            Array.from(numberToUint8Array(2)),
+            Array.from(numberToUint8Array(3))
+        ]
+    });
     const proof = await backend.generateProof(witness);
     console.log("proof:", proof);
     console.log("proof.proof: ", proof.proof)
+    const isValid = await backend.verifyProof(proof);
+    console.log("proof is", isValid);
 
 }
 
@@ -234,12 +232,12 @@ async function genPi1PrivateInput() {
 
 async function main () {
     // await genHash();
-    // await testProof();
+    await testProof();
     // await genSignature();
     // await testEthersECDSA();
     // await testEthersECDSA();
     // await genKeccak();
-    await genPi1PrivateInput();
+    // await genPi1PrivateInput();
 }
 
 

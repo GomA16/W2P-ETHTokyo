@@ -15,7 +15,7 @@ async function main() {
                 
         const noir = new Noir(circuit as any);
         const backend = new UltraHonkBackend(circuit.bytecode, {threads: 1});
-        const { witness } = await noir.execute({ x: "2", y: "1" })
+        const { witness } = await noir.execute({ y: "1", x :"2" })
         const proof = await backend.generateProof(witness,{ keccak: true });
 
         console.log("proof.proof", proof.proof);

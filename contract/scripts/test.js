@@ -92,9 +92,11 @@ var sha3_1 = require("@noble/hashes/sha3");
 var utils_1 = require("@noble/hashes/utils");
 var bb_js_1 = require("@aztec/bb.js");
 var noir_js_1 = require("@noir-lang/noir_js");
-var testCircuit_json_1 = __importDefault(require("../circuits/testCircuit/target/testCircuit.json"));
+var testCircuit_json_1 = __importDefault(require("./circuits/testCircuit/target/testCircuit.json"));
 var secp = __importStar(require("@noble/secp256k1"));
 var ethers_1 = require("ethers");
+var alice_json_1 = __importDefault(require("../test-data/alice.json"));
+var bob_json_1 = __importDefault(require("../test-data/bob.json"));
 function numberToUint8Array(num) {
     var buffer = new ArrayBuffer(32);
     var view = new DataView(buffer);
@@ -147,7 +149,7 @@ function testEthersECDSA() {
                     //   const sBytes = ethers.getBytes(sig.s);
                     //     const signatureForNoir = new Uint8Array([...rBytes, ...sBytes]);
                     // console.log("signatureFOrNoir", signatureForNoir);
-                    console.log("\nwallet address\n", wallet.signingKey.publicKey);
+                    console.log("\nverifying key\n", wallet.signingKey.publicKey);
                     return [2 /*return*/];
             }
         });
@@ -184,7 +186,7 @@ function genEthersECDSA() {
                     sBytes = ethers_1.ethers.getBytes(sig.s);
                     signatureForNoir = new Uint8Array(__spreadArray(__spreadArray([], __read(rBytes), false), __read(sBytes), false));
                     console.log("signatureFOrNoir", signatureForNoir);
-                    console.log("wallet address", wallet.signingKey.publicKey);
+                    console.log("verifying key", wallet.signingKey.publicKey);
                     publicKey = (0, utils_1.hexToBytes)(wallet.signingKey.publicKey.slice(2));
                     console.log("publicKey", publicKey);
                     xBytes = publicKey.slice(1, 33);
@@ -262,20 +264,24 @@ function genKeccak() {
 }
 function testProof() {
     return __awaiter(this, void 0, void 0, function () {
-        var noir, backend, witness, proof, isValid;
+        var noir, backend, witness, proof;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     noir = new noir_js_1.Noir(testCircuit_json_1.default);
                     backend = new bb_js_1.UltraHonkBackend(testCircuit_json_1.default.bytecode);
-                    return [4 /*yield*/, noir.execute({
-                            x: Array.from(numberToUint8Array(1)),
+                    return [4 /*yield*/, noir.execute({ x: [
+                                0, 1, 226, 64, 0, 0, 0, 0, 0,
+                                0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                0, 0, 0, 0, 0
+                            ],
                             y: [
-                                Array.from(numberToUint8Array(1)),
-                                Array.from(numberToUint8Array(2)),
-                                Array.from(numberToUint8Array(3))
-                            ]
-                        })];
+                                38, 188, 186, 60, 72, 102, 135, 156,
+                                46, 114, 41, 157, 252, 41, 153, 112,
+                                93, 130, 209, 199, 144, 8, 39, 44,
+                                31, 86, 104, 212, 162, 20, 237, 81
+                            ] })];
                 case 1:
                     witness = (_a.sent()).witness;
                     return [4 /*yield*/, backend.generateProof(witness)];
@@ -283,23 +289,18 @@ function testProof() {
                     proof = _a.sent();
                     console.log("proof:", proof);
                     console.log("proof.proof: ", proof.proof);
-                    return [4 /*yield*/, backend.verifyProof(proof)];
-                case 3:
-                    isValid = _a.sent();
-                    console.log("proof is", isValid);
                     return [2 /*return*/];
             }
         });
     });
 }
-var Alice_json_1 = __importDefault(require("./test-data/Alice.json"));
 var fs = __importStar(require("fs"));
 var path = __importStar(require("path"));
 function genPi1PrivateInput() {
     return __awaiter(this, void 0, void 0, function () {
         var name, s, baseId, repaid_k, unpaid_k, i, k, prv, i, state_1, loan_state, i, filePath;
         return __generator(this, function (_a) {
-            name = stringToUint8Array(Alice_json_1.default.message.name);
+            name = stringToUint8Array(alice_json_1.default.message.name);
             s = numberToUint8Array(123456);
             baseId = (0, sha3_1.keccak_256)(new Uint8Array(__spreadArray(__spreadArray([], __read(name), false), __read(s), false)));
             repaid_k = numberToUint8Array(5);
@@ -336,15 +337,205 @@ function genPi1PrivateInput() {
         });
     });
 }
+function test() {
+    return __awaiter(this, void 0, void 0, function () {
+        var num, bi, numU8, biU8;
+        return __generator(this, function (_a) {
+            num = 1000;
+            bi = BigInt(1000);
+            numU8 = stringToUint8Array(num.toString(16));
+            biU8 = stringToUint8Array(bi.toString(16));
+            console.log("nu", numU8);
+            console.log("bi", biU8);
+            console.log("?=", (0, utils_1.bytesToHex)(numU8) === (0, utils_1.bytesToHex)(biU8));
+            return [2 /*return*/];
+        });
+    });
+}
+var borrow_json_1 = __importDefault(require("../circuits/borrow/target/borrow.json"));
+function testBorrowCircuit() {
+    return __awaiter(this, void 0, void 0, function () {
+        var noir, backend, loanState, i, loanExpired, i, LendingInfo, scAddr, auroraInfo, almondInfo, bananaInfo;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    noir = new noir_js_1.Noir(borrow_json_1.default);
+                    backend = new bb_js_1.UltraHonkBackend(borrow_json_1.default.bytecode);
+                    loanState = [];
+                    for (i = 0; i < 32; i++) {
+                        loanState.push(stringToUint8Array("0"));
+                    }
+                    loanExpired = [];
+                    for (i = 0; i < 32; i++) {
+                        loanExpired.push(stringToUint8Array("0"));
+                    }
+                    LendingInfo = /** @class */ (function () {
+                        function LendingInfo(name, s, scAddr, income, workyears) {
+                            this.repaid = 0;
+                            this.unpaid = [];
+                            this.k = 0;
+                            this.loanId = numberToUint8Array(0);
+                            this.income = income;
+                            this.workYears = workyears;
+                            this.ethCap = BigInt(income) * (BigInt(workyears) + BigInt(55)) * BigInt(10000000000000000) / BigInt(300000);
+                            this.s = s;
+                            this.baseId = (0, sha3_1.keccak_256)(new Uint8Array(__spreadArray(__spreadArray([], __read(stringToUint8Array(name)), false), __read(numberToUint8Array(141421356)), false)));
+                            var tmp = new Uint8Array(__spreadArray(__spreadArray([], __read(numberToUint8Array(0)), false), __read(numberToUint8Array(0)), false));
+                            for (var i = 0; i < 32; i++) {
+                                this.unpaid.push([numberToUint8Array(0), numberToUint8Array(0)]);
+                                if (i > 0)
+                                    tmp = new Uint8Array(__spreadArray(__spreadArray(__spreadArray([], __read(tmp), false), __read(numberToUint8Array(0)), false), __read(numberToUint8Array(0)), false));
+                            }
+                            // this.address = address;
+                            this.scAddr = scAddr;
+                            this.state = (0, sha3_1.keccak_256)(new Uint8Array(__spreadArray(__spreadArray(__spreadArray(__spreadArray([], __read(this.baseId), false), __read(numberToUint8Array(this.repaid)), false), __read(tmp), false), __read(numberToUint8Array(this.k)), false)));
+                        }
+                        LendingInfo.prototype.lend = function (amount) {
+                            return __awaiter(this, void 0, void 0, function () {
+                                var kNext, loanIdNext, nfState, i, tmp, i, stateNext, witness, proof, isValid, i;
+                                return __generator(this, function (_a) {
+                                    switch (_a.label) {
+                                        case 0:
+                                            kNext = this.k + 1;
+                                            loanIdNext = (0, sha3_1.keccak_256)(new Uint8Array(__spreadArray(__spreadArray([], __read(this.baseId), false), __read(numberToUint8Array(this.k)), false)));
+                                            nfState = (0, sha3_1.keccak_256)(new Uint8Array(__spreadArray(__spreadArray(__spreadArray([], __read(this.baseId), false), __read(stringToUint8Array(this.scAddr)), false), __read(numberToUint8Array(this.k)), false)));
+                                            for (i = 0; i < 32; i++) {
+                                                if ((0, utils_1.bytesToHex)(this.unpaid[i][0]) === (0, utils_1.bytesToHex)(numberToUint8Array(0)) &&
+                                                    (0, utils_1.bytesToHex)(this.unpaid[i][1]) === (0, utils_1.bytesToHex)(numberToUint8Array(0))) {
+                                                    this.unpaid[i][0] = loanIdNext;
+                                                    this.unpaid[i][1] = stringToUint8Array("0x" + amount.toString(16));
+                                                }
+                                            }
+                                            tmp = new Uint8Array(__spreadArray(__spreadArray([], __read(this.unpaid[0][1]), false), __read(this.unpaid[0][1]), false));
+                                            for (i = 1; i < 32; i++) {
+                                                tmp = new Uint8Array(__spreadArray(__spreadArray(__spreadArray([], __read(tmp), false), __read(this.unpaid[i][0]), false), __read(this.unpaid[i][1]), false));
+                                            }
+                                            stateNext = (0, sha3_1.keccak_256)(new Uint8Array(__spreadArray(__spreadArray(__spreadArray(__spreadArray([], __read(this.baseId), false), __read(numberToUint8Array(this.repaid)), false), __read(tmp), false), __read(numberToUint8Array(kNext)), false)));
+                                            // const beforeBalance = await ethers.provider.getBala/nce(this.address.address);
+                                            //  // --- For borrowCircuit1 ---
+                                            // loan_state:pub [[u8;32];32],
+                                            // baseid: [u8;32],
+                                            // repaid_k: [u8;32],
+                                            // unpaid_k: [UnpaiedEntry;32],
+                                            // k: [u8;32],
+                                            // // --- For borrowCircuit2 ---
+                                            // loan_expired:pub [[u8;32]; 32],
+                                            // eth_amt:pub u64,
+                                            // work_years: u64,
+                                            // income: u64,
+                                            // // --- For borrowCircuit3 ---
+                                            // state_k_next:pub [u8;32],
+                                            // loanid_k_next:pub [u8;32],
+                                            // eth_amt_bytes32:pub [u8;32],
+                                            // // --- For borrowCircuit4 ---
+                                            // SCAddr:pub [u8;32],
+                                            // NF_state_k1:pub [u8;32],
+                                            console.log((0, utils_1.hexToBytes)((0, ethers_1.zeroPadValue)(this.scAddr, 32).slice(2)));
+                                            console.log("going To proving process");
+                                            return [4 /*yield*/, noir.execute({
+                                                    NF_state_k1: Array.from(nfState),
+                                                    SCAddr: Array.from((0, utils_1.hexToBytes)((0, ethers_1.zeroPadValue)(this.scAddr, 32).slice(2))),
+                                                    baseid: Array.from(this.baseId),
+                                                    eth_amt: amount.toString(),
+                                                    eth_amt_bytes32: Array.from(stringToUint8Array(amount.toString())),
+                                                    income: this.income,
+                                                    k: Array.from(numberToUint8Array(this.k)),
+                                                    loan_expired: loanExpired.map(function (u8) { return Array.from(u8); }),
+                                                    loan_state: loanState.map(function (u8) { return Array.from(u8); }),
+                                                    loanid_k_next: Array.from(numberToUint8Array(kNext)),
+                                                    repaid_k: Array.from(numberToUint8Array(this.repaid)),
+                                                    state_k_next: Array.from(stateNext),
+                                                    unpaid_k: this.unpaid.map(function (tuple) { return tuple.map(function (u8) { return Array.from(u8); }); }),
+                                                    work_years: this.workYears,
+                                                })];
+                                        case 1:
+                                            witness = (_a.sent()).witness;
+                                            console.log("circuit executed");
+                                            return [4 /*yield*/, backend.generateProof(witness, { keccak: true })];
+                                        case 2:
+                                            proof = _a.sent();
+                                            console.log("proof generated");
+                                            return [4 /*yield*/, backend.verifyProof(proof)];
+                                        case 3:
+                                            isValid = _a.sent();
+                                            console.log("proof is ", isValid);
+                                            for (i = 0; i < 32; i++) {
+                                                if ((0, utils_1.bytesToHex)(loanState[i]) === (0, utils_1.bytesToHex)(numberToUint8Array(0))) {
+                                                    loanState[i] = stateNext;
+                                                    break;
+                                                }
+                                            }
+                                            this.ethCap -= amount;
+                                            this.k = kNext;
+                                            this.state = stateNext;
+                                            this.loanId = loanIdNext;
+                                            return [2 /*return*/];
+                                    }
+                                });
+                            });
+                        };
+                        LendingInfo.prototype.repay = function (amount) {
+                            return __awaiter(this, void 0, void 0, function () {
+                                var kNext, loanIdNext, nfState, i, tmp, i, stateNext;
+                                return __generator(this, function (_a) {
+                                    kNext = this.k + 1;
+                                    loanIdNext = (0, sha3_1.keccak_256)(new Uint8Array(__spreadArray(__spreadArray([], __read(this.baseId), false), __read(numberToUint8Array(this.k)), false)));
+                                    nfState = (0, sha3_1.keccak_256)(new Uint8Array(__spreadArray(__spreadArray(__spreadArray([], __read(this.baseId), false), __read(stringToUint8Array(this.scAddr)), false), __read(numberToUint8Array(this.k)), false)));
+                                    for (i = 0; i < 32; i++) {
+                                        if ((0, utils_1.bytesToHex)(this.unpaid[i][0]) === (0, utils_1.bytesToHex)(numberToUint8Array(0)) &&
+                                            (0, utils_1.bytesToHex)(this.unpaid[i][1]) === (0, utils_1.bytesToHex)(numberToUint8Array(0))) {
+                                            this.unpaid[i][0] = loanIdNext;
+                                            this.unpaid[i][1] = stringToUint8Array("0x" + amount.toString(16));
+                                        }
+                                    }
+                                    tmp = new Uint8Array(__spreadArray(__spreadArray([], __read(this.unpaid[0][1]), false), __read(this.unpaid[0][1]), false));
+                                    for (i = 1; i < 32; i++) {
+                                        tmp = new Uint8Array(__spreadArray(__spreadArray(__spreadArray([], __read(tmp), false), __read(this.unpaid[i][0]), false), __read(this.unpaid[i][1]), false));
+                                    }
+                                    stateNext = (0, sha3_1.keccak_256)(new Uint8Array(__spreadArray(__spreadArray(__spreadArray(__spreadArray([], __read(this.baseId), false), __read(numberToUint8Array(this.repaid)), false), __read(tmp), false), __read(numberToUint8Array(kNext)), false)));
+                                    this.ethCap += amount;
+                                    this.k = kNext;
+                                    this.state = stateNext;
+                                    this.loanId = loanIdNext;
+                                    return [2 /*return*/];
+                                });
+                            });
+                        };
+                        return LendingInfo;
+                    }());
+                    scAddr = "0x5fbdb2315678afecb367f032d93f642f64180aa3";
+                    auroraInfo = new LendingInfo(alice_json_1.default.message.name, 141421356, scAddr, alice_json_1.default.message.income, alice_json_1.default.message.years_of_service);
+                    almondInfo = new LendingInfo(alice_json_1.default.message.name, 141421356, scAddr, alice_json_1.default.message.income, alice_json_1.default.message.years_of_service);
+                    bananaInfo = new LendingInfo(bob_json_1.default.message.name, 17320508, scAddr, bob_json_1.default.message.income, bob_json_1.default.message.years_of_service);
+                    return [4 /*yield*/, auroraInfo.lend(BigInt(10))];
+                case 1:
+                    _a.sent();
+                    return [2 /*return*/];
+            }
+        });
+    });
+}
 function main() {
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: 
                 // await genHash();
-                return [4 /*yield*/, testProof()];
+                // await testProof();
+                // await genSignature();
+                // await testEthersECDSA();
+                // await genKeccak();
+                // await genPi1PrivateInput();
+                // test();
+                return [4 /*yield*/, testBorrowCircuit()];
                 case 1:
                     // await genHash();
+                    // await testProof();
+                    // await genSignature();
+                    // await testEthersECDSA();
+                    // await genKeccak();
+                    // await genPi1PrivateInput();
+                    // test();
                     _a.sent();
                     return [2 /*return*/];
             }

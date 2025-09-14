@@ -173,7 +173,7 @@ fn main(
     loan_state:pub [[u8;32];32],
     baseid: [u8;32],
     repaid_k: [u8;32],
-    unpaid_k: [UnpaiedEntry;32],
+    unpaid_k: [[[u8;32];2];32],
     k: [u8;32],
     // --- For borrowCircuit2 ---
     loan_expired:pub [[u8;32]; 32],
@@ -188,9 +188,16 @@ fn main(
     SCAddr:pub [u8;32],
     NF_state_k1:pub [u8;32],
 ) {
-    let ok1 = borrowCircuit1(loan_state, baseid, repaid_k, unpaid_k, k);
-    let ok2 = borrowCircuit2(loan_expired, eth_amt, work_years, income, unpaid_k);
-    let ok3 = borrowCircuit3(state_k_next, loanid_k_next, eth_amt_bytes32, baseid, repaid_k, unpaid_k, k);
+    let mut unpaid_use:[UnpaiedEntry;32] = [UnpaiedEntry{unpaied_loan_id: [0;32], unpaied_amt: [0;32]};32];
+    for i in 0..32 {
+        unpaid_use[i] = UnpaiedEntry{
+            unpaied_loan_id: unpaid_k[i][0],
+            unpaied_amt: unpaid_k[i][1]
+        }
+    }
+    let ok1 = borrowCircuit1(loan_state, baseid, repaid_k, unpaid_use, k);
+    let ok2 = borrowCircuit2(loan_expired, eth_amt, work_years, income, unpaid_use);
+    let ok3 = borrowCircuit3(state_k_next, loanid_k_next, eth_amt_bytes32, baseid, repaid_k, unpaid_use, k);
     let ok4 = borrowCircuit4(SCAddr, NF_state_k1, baseid, k);
 
     assert(ok1);

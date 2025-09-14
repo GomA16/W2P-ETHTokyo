@@ -3,6 +3,7 @@
 pragma solidity >=0.8.21;
 
 import {TestCircuitHonkVerifier} from "./TestCircuitVerifier.sol";
+import {borrowHonkVerifier} from "./borrowVerifier.sol";
 
 contract W2P {
     // zkいらない部分を先に書いとく
@@ -38,12 +39,16 @@ contract W2P {
 
     // ここから先がzk必要な部分
 
+    // 今までのすべてのstate
     bytes32[32] loanState;
     uint256 loanStateIndex;
+    // すべての期限を過ぎたloan
     bytes32[32] loanExpired;
     uint256 loanExpiredIndex;
-    bytes32[32] nfStatesList;
-    uint256 nfStateIndex;
+    // nullifierのリスト
+    mapping(bytes32 => bool) nfStatesList;
+
+    // 時計の代わり
     uint256 step;
 
     function incrStep() external {
@@ -53,18 +58,17 @@ contract W2P {
     struct LoanInfo {
         bytes32 id;
         uint256 date;
-        bool alive;
+        bool alive; //loanExpiredに追加されているかどうか
     }
 
     LoanInfo[] LoanList;
 
-    TestCircuitHonkVerifier verifier;
+    borrowHonkVerifier borrowVerifier;
 
     constructor() {
-        verifier = new TestCircuitHonkVerifier();
+        borrowVerifier = new borrowHonkVerifier();
         loanStateIndex = 0;
         loanExpiredIndex = 0;
-        nfStateIndex = 0;
         step = 0;
     }
 
@@ -74,12 +78,21 @@ contract W2P {
         bytes calldata _proofHex,
         bytes32[] calldata _proofInput
     ) external returns (bool) {
-        bool isValid = verifier.verify(_proofHex, _proofInput);
+        bool isValid = borrowVerifier.verify(_proofHex, _proofInput);
         emit ZKProofPassed(msg.sender, isValid);
         return isValid;
     }
 
     event Lend(address indexed _address, uint256 _amount);
+
+    struct PublicInfo {
+        bytes32[32] loanState;
+        bytes32[32] loanExpired;
+    }
+
+    function getPublicInfo() external view returns (PublicInfo memory) {
+        return PublicInfo({loanState: loanState, loanExpired: loanExpired});
+    }
 
     function lend(
         uint256 _amount,
@@ -91,10 +104,10 @@ contract W2P {
         // 証明を検証する
         // msg.senderにethcapを送る
         loanState[loanStateIndex++] = nextState;
-        nfStatesList[nfStateIndex++] = nextNFState;
+        nfStatesList[nextNFState] = true;
         LoanList.push(LoanInfo({id: nextLoanId, date: step, alive: false}));
-        (bool success, ) = msg.sender.call{value: _amount}("");
-        require(success, "Failed to send Ether");
+        (bool success2, ) = msg.sender.call{value: _amount}("");
+        require(success2, "Failed to send Ether");
         pooledETH -= _amount;
         step++;
         emit Lend(msg.sender, _amount);
@@ -104,7 +117,7 @@ contract W2P {
         // loanStateを送る
         // 証明を検証する
         loanState[loanStateIndex++] = nextState;
-        nfStatesList[nfStateIndex++] = nextNFState;
+        nfStatesList[nextNFState] = true;
         pooledETH += msg.value;
         step++;
     }
