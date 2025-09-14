@@ -104,6 +104,51 @@ function numberToUint8Array(num) {
 }
 function testEthersECDSA() {
     return __awaiter(this, void 0, void 0, function () {
+        var secretKey, privateKey, wallet, message, signature;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    secretKey = new Uint8Array([
+                        207, 107, 198, 151, 157, 173, 219, 249,
+                        170, 39, 52, 113, 62, 145, 28, 162,
+                        67, 80, 76, 0, 147, 93, 232, 127,
+                        233, 67, 235, 14, 191, 6, 184, 48
+                    ]);
+                    privateKey = "0x" + (0, utils_1.bytesToHex)(secretKey);
+                    wallet = new ethers_1.ethers.Wallet(privateKey);
+                    message = JSON.stringify({
+                        "name": "Bob",
+                        "my_number": "252525",
+                        "income": "120000",
+                        "years_of_service": "27",
+                        "c_s": "7ca4e6bf8f6a9f5ece85cd1ae1d3639420a20c03575cb704ecdd9381a91dc521"
+                    });
+                    return [4 /*yield*/, wallet.signMessage(message)];
+                case 1:
+                    signature = _a.sent();
+                    console.log("Signature:", signature);
+                    // 署名を検証
+                    //     const recoveredAddress = ethers.verifyMessage(message, signature);
+                    //     console.log("Recovered Address:", recoveredAddress);
+                    //     console.log("Is signature valid?", recoveredAddress === wallet.address); // -> true
+                    //     const sig = ethers.Signature.from(signature);
+                    //   console.log('Parsed r:', sig.r);
+                    //   console.log('Parsed s:', sig.s);
+                    //   console.log('Parsed v:', sig.v);
+                    //   // 3. Noir回路など、64バイトの署名を期待する関数に渡す準備
+                    //   // r (32バイト) と s (32バイト) を連結する
+                    //   const rBytes = ethers.getBytes(sig.r);
+                    //   const sBytes = ethers.getBytes(sig.s);
+                    //     const signatureForNoir = new Uint8Array([...rBytes, ...sBytes]);
+                    // console.log("signatureFOrNoir", signatureForNoir);
+                    console.log("\nwallet address\n", wallet.signingKey.publicKey);
+                    return [2 /*return*/];
+            }
+        });
+    });
+}
+function genEthersECDSA() {
+    return __awaiter(this, void 0, void 0, function () {
         var secretKey, privateKey, wallet, message, signature, recoveredAddress, sig, rBytes, sBytes, signatureForNoir, publicKey, xBytes, yBytes, hex_sig, noir_message;
         return __generator(this, function (_a) {
             switch (_a.label) {
@@ -204,7 +249,7 @@ function genKeccak() {
             x = numberToUint8Array(123456);
             console.log("x:", x);
             y = (0, sha3_1.keccak_256)(x);
-            console.log("y", y);
+            console.log("y", "0x" + (0, utils_1.bytesToHex)(y));
             return [2 /*return*/];
         });
     });
@@ -250,12 +295,15 @@ function main() {
                 // await testProof();
                 // await genSignature();
                 // await testEthersECDSA();
-                return [4 /*yield*/, genKeccak()];
+                return [4 /*yield*/, testEthersECDSA()];
                 case 1:
                     // await genHash();
                     // await testProof();
                     // await genSignature();
                     // await testEthersECDSA();
+                    _a.sent();
+                    return [4 /*yield*/, genKeccak()];
+                case 2:
                     _a.sent();
                     return [2 /*return*/];
             }

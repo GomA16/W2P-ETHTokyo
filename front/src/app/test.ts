@@ -27,7 +27,14 @@ async function testEthersECDSA() {
     // console.log("private key:", privateKey);
     const wallet = new ethers.Wallet(privateKey);
 
-    const message = "hello ethers";
+    const message = JSON.stringify( {
+    "name": "Bob",
+    "my_number" : "252525",
+    "income" : "120000",
+    "years_of_service" : "27",
+    "c_s" : "7ca4e6bf8f6a9f5ece85cd1ae1d3639420a20c03575cb704ecdd9381a91dc521"
+    }
+);
     const signature = await wallet.signMessage(message);
     console.log("Signature:", signature);
 
@@ -51,7 +58,7 @@ async function testEthersECDSA() {
 //     const signatureForNoir = new Uint8Array([...rBytes, ...sBytes]);
     // console.log("signatureFOrNoir", signatureForNoir);
     
-    console.log("wallet address", wallet.signingKey.publicKey);
+    console.log("\nwallet address\n", wallet.signingKey.publicKey);
     // const publicKey = hexToBytes(wallet.signingKey.publicKey.slice(2));
     // // console.log("publicKey", publicKey);
     // const xBytes = publicKey.slice(1, 33); // 1バイト目から32バイト分
@@ -154,7 +161,7 @@ async function genKeccak () {
     const x = numberToUint8Array(123456);
     console.log("x:",x);
     const y = keccak_256(x);
-    console.log("y",y)
+    console.log("y","0x"+bytesToHex(y))
 }
 
 async function testProof () {
@@ -184,7 +191,7 @@ async function main () {
     // await testProof();
     // await genSignature();
     // await testEthersECDSA();
-    await genEthersECDSA();
+    await testEthersECDSA();
     await genKeccak();
 }
 
