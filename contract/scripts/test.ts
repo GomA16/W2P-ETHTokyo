@@ -5,7 +5,7 @@ import { UltraHonkBackend } from '@aztec/bb.js';
 import { Noir, ecdsa_secp256k1_verify } from '@noir-lang/noir_js';
 import  testCircuit from "./circuits/testCircuit/target/testCircuit.json";
 import * as secp from '@noble/secp256k1';
-import { ethers, zeroPadValue } from 'ethers';
+import { ethers, zeroPadBytes, zeroPadValue } from 'ethers';
 import Alice from "../test-data/alice.json";
 import Bob from "../test-data/bob.json";
 
@@ -22,6 +22,22 @@ function stringToUint8Array(input: string): Uint8Array {
   const result = new Uint8Array(32);
   result.set(encodedString.slice(0, 32));
   return result;
+}
+
+function bigintToHex(num: bigint): string {
+  // 1. bigintを16進数文字列に変換 ( "0x" は含まない)
+  let hex = num.toString(16);
+
+  // 2. 文字列の長さが奇数の場合、先頭に"0"を付けて偶数にする
+  if (hex.length % 2 !== 0) {
+    hex = '0' + hex;
+  }
+
+  // 3. ethers.zeroPadValue は '0x' プレフィックスを必要とする
+  const fullHex = '0x' + hex;
+
+  // 4. 指定されたバイト長になるように、さらに先頭をゼロパディングする
+  return ethers.zeroPadValue(fullHex, 32);
 }
 async function testEthersECDSA() {
        const secretKey = new Uint8Array([
@@ -236,11 +252,9 @@ async function genPi1PrivateInput() {
 async function test() {
     const num = 1000;
     const bi = BigInt(1000);
-    const numU8 = stringToUint8Array(num.toString(16));
+    const numU8 = numberToUint8Array(num);
     const biU8 = stringToUint8Array(bi.toString(16));
-    console.log("nu", numU8)
-    console.log("bi", biU8)
-    console.log("?=", bytesToHex(numU8) === bytesToHex(biU8))
+    console.log("nu", bi.toString(16))
 }
 
 import borrowCircuit from "../circuits/borrow/target/borrow.json";
@@ -269,9 +283,9 @@ async function testBorrowCircuit() {
     const backend = new UltraHonkBackend(borrowCircuit.bytecode);
 
     let loanState: Uint8Array[] = [];
-    for (let i = 0; i < 32; i++) { loanState.push(stringToUint8Array("0")) }
+    for (let i = 0; i < 32; i++) { loanState.push(numberToUint8Array(0)) }
     let loanExpired: Uint8Array[] = [];
-    for (let i = 0; i < 32; i++) { loanExpired.push(stringToUint8Array("0")) }
+    for (let i = 0; i < 32; i++) { loanExpired.push(numberToUint8Array(0)) }
 
     class LendingInfo {
         public s: number;
@@ -299,29 +313,31 @@ async function testBorrowCircuit() {
                 if (i > 0) tmp = new Uint8Array([...tmp, ...numberToUint8Array(0), ...numberToUint8Array(0)]);
             }
             // this.address = address;
-            this.scAddr = scAddr;
+            this.scAddr = zeroPadValue(scAddr,32);
             this.state = keccak_256(new Uint8Array([...this.baseId, ...numberToUint8Array(this.repaid), ...tmp, ...numberToUint8Array(this.k)]));
         }
 
         public async lend(amount: bigint) {
+            console.log(amount.toString(16));
+            console.log(hexToBytes(bigintToHex(amount).slice(2)))
+            
             // console.log(this.address.address, "info\n", this);
             // console.
             const kNext = this.k + 1;
             const loanIdNext = keccak_256(new Uint8Array([...this.baseId, ...numberToUint8Array(this.k)]));
-            const nfState = keccak_256(new Uint8Array([...this.baseId, ...stringToUint8Array(this.scAddr), ...numberToUint8Array(this.k)]));
+            const nfState = keccak_256(new Uint8Array([...this.baseId, ...hexToBytes(zeroPadValue(this.scAddr, 32).slice(2)), ...numberToUint8Array(this.k)]));
             for (let i = 0; i < 32; i++) {
                 if (
                     bytesToHex(this.unpaid[i][0]) === bytesToHex(numberToUint8Array(0)) &&
                     bytesToHex(this.unpaid[i][1]) === bytesToHex(numberToUint8Array(0))
                 ) {
                     this.unpaid[i][0] = loanIdNext;
-                    this.unpaid[i][1] = stringToUint8Array("0x"+amount.toString(16));
+                    this.unpaid[i][1] = hexToBytes(bigintToHex(amount).slice(2));
                 }
             }
             let tmp = new Uint8Array([...this.unpaid[0][1], ...this.unpaid[0][1]]);
             for (let i = 1; i < 32; i++) { tmp = new Uint8Array([...tmp, ...this.unpaid[i][0], ...this.unpaid[i][1]]); }
             const stateNext = keccak_256(new Uint8Array([...this.baseId, ...numberToUint8Array(this.repaid), ...tmp, ...numberToUint8Array(kNext)]));
-
 
 
             // const beforeBalance = await ethers.provider.getBala/nce(this.address.address);
@@ -350,7 +366,7 @@ async function testBorrowCircuit() {
                 SCAddr: Array.from(hexToBytes(zeroPadValue(this.scAddr, 32).slice(2))),
                 baseid: Array.from(this.baseId),
                 eth_amt: amount.toString(),
-                eth_amt_bytes32: Array.from(stringToUint8Array(amount.toString())),
+                eth_amt_bytes32: Array.from(hexToBytes(bigintToHex(amount).slice(2))),
                 income: this.income,
                 k: Array.from(numberToUint8Array(this.k)),
                 loan_expired: loanExpired.map(u8 => Array.from(u8)),
@@ -383,14 +399,14 @@ async function testBorrowCircuit() {
         public async repay(amount: bigint) {
             const kNext = this.k + 1;
             const loanIdNext = keccak_256(new Uint8Array([...this.baseId, ...numberToUint8Array(this.k)]));
-            const nfState = keccak_256(new Uint8Array([...this.baseId, ...stringToUint8Array(this.scAddr), ...numberToUint8Array(this.k)]));
+            const nfState = keccak_256(new Uint8Array([...this.baseId, ...hexToBytes(this.scAddr), ...numberToUint8Array(this.k)]));
             for (let i = 0; i < 32; i++) {
                 if (
                     bytesToHex(this.unpaid[i][0]) === bytesToHex(numberToUint8Array(0)) &&
                     bytesToHex(this.unpaid[i][1]) === bytesToHex(numberToUint8Array(0))
                 ) {
                     this.unpaid[i][0] = loanIdNext;
-                    this.unpaid[i][1] = stringToUint8Array("0x"+amount.toString(16));
+                    this.unpaid[i][1] = hexToBytes(bigintToHex(amount));
                 }
             }
             let tmp = new Uint8Array([...this.unpaid[0][1], ...this.unpaid[0][1]]);
@@ -411,7 +427,7 @@ async function testBorrowCircuit() {
     const almondInfo = new LendingInfo(Alice.message.name, 141421356,  scAddr, Alice.message.income, Alice.message.years_of_service);
     const bananaInfo = new LendingInfo(Bob.message.name, 17320508, scAddr, Bob.message.income, Bob.message.years_of_service)
 
-    await auroraInfo.lend(BigInt(10));
+    await auroraInfo.lend(BigInt(15));
 }
 
 

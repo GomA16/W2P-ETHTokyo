@@ -110,6 +110,18 @@ function stringToUint8Array(input) {
     result.set(encodedString.slice(0, 32));
     return result;
 }
+function bigintToHex(num) {
+    // 1. bigintを16進数文字列に変換 ( "0x" は含まない)
+    var hex = num.toString(16);
+    // 2. 文字列の長さが奇数の場合、先頭に"0"を付けて偶数にする
+    if (hex.length % 2 !== 0) {
+        hex = '0' + hex;
+    }
+    // 3. ethers.zeroPadValue は '0x' プレフィックスを必要とする
+    var fullHex = '0x' + hex;
+    // 4. 指定されたバイト長になるように、さらに先頭をゼロパディングする
+    return ethers_1.ethers.zeroPadValue(fullHex, 32);
+}
 function testEthersECDSA() {
     return __awaiter(this, void 0, void 0, function () {
         var secretKey, privateKey, wallet, message, signature;
@@ -343,11 +355,9 @@ function test() {
         return __generator(this, function (_a) {
             num = 1000;
             bi = BigInt(1000);
-            numU8 = stringToUint8Array(num.toString(16));
+            numU8 = numberToUint8Array(num);
             biU8 = stringToUint8Array(bi.toString(16));
-            console.log("nu", numU8);
-            console.log("bi", biU8);
-            console.log("?=", (0, utils_1.bytesToHex)(numU8) === (0, utils_1.bytesToHex)(biU8));
+            console.log("nu", bi.toString(16));
             return [2 /*return*/];
         });
     });
@@ -363,11 +373,11 @@ function testBorrowCircuit() {
                     backend = new bb_js_1.UltraHonkBackend(borrow_json_1.default.bytecode);
                     loanState = [];
                     for (i = 0; i < 32; i++) {
-                        loanState.push(stringToUint8Array("0"));
+                        loanState.push(numberToUint8Array(0));
                     }
                     loanExpired = [];
                     for (i = 0; i < 32; i++) {
-                        loanExpired.push(stringToUint8Array("0"));
+                        loanExpired.push(numberToUint8Array(0));
                     }
                     LendingInfo = /** @class */ (function () {
                         function LendingInfo(name, s, scAddr, income, workyears) {
@@ -387,7 +397,7 @@ function testBorrowCircuit() {
                                     tmp = new Uint8Array(__spreadArray(__spreadArray(__spreadArray([], __read(tmp), false), __read(numberToUint8Array(0)), false), __read(numberToUint8Array(0)), false));
                             }
                             // this.address = address;
-                            this.scAddr = scAddr;
+                            this.scAddr = (0, ethers_1.zeroPadValue)(scAddr, 32);
                             this.state = (0, sha3_1.keccak_256)(new Uint8Array(__spreadArray(__spreadArray(__spreadArray(__spreadArray([], __read(this.baseId), false), __read(numberToUint8Array(this.repaid)), false), __read(tmp), false), __read(numberToUint8Array(this.k)), false)));
                         }
                         LendingInfo.prototype.lend = function (amount) {
@@ -396,14 +406,16 @@ function testBorrowCircuit() {
                                 return __generator(this, function (_a) {
                                     switch (_a.label) {
                                         case 0:
+                                            console.log(amount.toString(16));
+                                            console.log((0, utils_1.hexToBytes)(bigintToHex(amount).slice(2)));
                                             kNext = this.k + 1;
                                             loanIdNext = (0, sha3_1.keccak_256)(new Uint8Array(__spreadArray(__spreadArray([], __read(this.baseId), false), __read(numberToUint8Array(this.k)), false)));
-                                            nfState = (0, sha3_1.keccak_256)(new Uint8Array(__spreadArray(__spreadArray(__spreadArray([], __read(this.baseId), false), __read(stringToUint8Array(this.scAddr)), false), __read(numberToUint8Array(this.k)), false)));
+                                            nfState = (0, sha3_1.keccak_256)(new Uint8Array(__spreadArray(__spreadArray(__spreadArray([], __read(this.baseId), false), __read((0, utils_1.hexToBytes)((0, ethers_1.zeroPadValue)(this.scAddr, 32).slice(2))), false), __read(numberToUint8Array(this.k)), false)));
                                             for (i = 0; i < 32; i++) {
                                                 if ((0, utils_1.bytesToHex)(this.unpaid[i][0]) === (0, utils_1.bytesToHex)(numberToUint8Array(0)) &&
                                                     (0, utils_1.bytesToHex)(this.unpaid[i][1]) === (0, utils_1.bytesToHex)(numberToUint8Array(0))) {
                                                     this.unpaid[i][0] = loanIdNext;
-                                                    this.unpaid[i][1] = stringToUint8Array("0x" + amount.toString(16));
+                                                    this.unpaid[i][1] = (0, utils_1.hexToBytes)(bigintToHex(amount).slice(2));
                                                 }
                                             }
                                             tmp = new Uint8Array(__spreadArray(__spreadArray([], __read(this.unpaid[0][1]), false), __read(this.unpaid[0][1]), false));
@@ -437,7 +449,7 @@ function testBorrowCircuit() {
                                                     SCAddr: Array.from((0, utils_1.hexToBytes)((0, ethers_1.zeroPadValue)(this.scAddr, 32).slice(2))),
                                                     baseid: Array.from(this.baseId),
                                                     eth_amt: amount.toString(),
-                                                    eth_amt_bytes32: Array.from(stringToUint8Array(amount.toString())),
+                                                    eth_amt_bytes32: Array.from((0, utils_1.hexToBytes)(bigintToHex(amount).slice(2))),
                                                     income: this.income,
                                                     k: Array.from(numberToUint8Array(this.k)),
                                                     loan_expired: loanExpired.map(function (u8) { return Array.from(u8); }),
@@ -480,12 +492,12 @@ function testBorrowCircuit() {
                                 return __generator(this, function (_a) {
                                     kNext = this.k + 1;
                                     loanIdNext = (0, sha3_1.keccak_256)(new Uint8Array(__spreadArray(__spreadArray([], __read(this.baseId), false), __read(numberToUint8Array(this.k)), false)));
-                                    nfState = (0, sha3_1.keccak_256)(new Uint8Array(__spreadArray(__spreadArray(__spreadArray([], __read(this.baseId), false), __read(stringToUint8Array(this.scAddr)), false), __read(numberToUint8Array(this.k)), false)));
+                                    nfState = (0, sha3_1.keccak_256)(new Uint8Array(__spreadArray(__spreadArray(__spreadArray([], __read(this.baseId), false), __read((0, utils_1.hexToBytes)(this.scAddr)), false), __read(numberToUint8Array(this.k)), false)));
                                     for (i = 0; i < 32; i++) {
                                         if ((0, utils_1.bytesToHex)(this.unpaid[i][0]) === (0, utils_1.bytesToHex)(numberToUint8Array(0)) &&
                                             (0, utils_1.bytesToHex)(this.unpaid[i][1]) === (0, utils_1.bytesToHex)(numberToUint8Array(0))) {
                                             this.unpaid[i][0] = loanIdNext;
-                                            this.unpaid[i][1] = stringToUint8Array("0x" + amount.toString(16));
+                                            this.unpaid[i][1] = (0, utils_1.hexToBytes)(bigintToHex(amount));
                                         }
                                     }
                                     tmp = new Uint8Array(__spreadArray(__spreadArray([], __read(this.unpaid[0][1]), false), __read(this.unpaid[0][1]), false));
@@ -507,7 +519,7 @@ function testBorrowCircuit() {
                     auroraInfo = new LendingInfo(alice_json_1.default.message.name, 141421356, scAddr, alice_json_1.default.message.income, alice_json_1.default.message.years_of_service);
                     almondInfo = new LendingInfo(alice_json_1.default.message.name, 141421356, scAddr, alice_json_1.default.message.income, alice_json_1.default.message.years_of_service);
                     bananaInfo = new LendingInfo(bob_json_1.default.message.name, 17320508, scAddr, bob_json_1.default.message.income, bob_json_1.default.message.years_of_service);
-                    return [4 /*yield*/, auroraInfo.lend(BigInt(10))];
+                    return [4 /*yield*/, auroraInfo.lend(BigInt(15))];
                 case 1:
                     _a.sent();
                     return [2 /*return*/];

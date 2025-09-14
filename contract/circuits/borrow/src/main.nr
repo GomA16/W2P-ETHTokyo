@@ -188,7 +188,7 @@ fn main(
     SCAddr:pub [u8;32],
     NF_state_k1:pub [u8;32],
 ) {
-    let mut unpaid_use:[UnpaiedEntry;32] = [UnpaiedEntry{unpaied_loan_id: [0;32], unpaied_amt: [0;32]};32];
+    let mut unpaid_use:[UnpaiedEntry;32] = [UnpaiedEntry{unpaied_loan_id: [0u8;32], unpaied_amt: [0u8;32]};32];
     for i in 0..32 {
         unpaid_use[i] = UnpaiedEntry{
             unpaied_loan_id: unpaid_k[i][0],
