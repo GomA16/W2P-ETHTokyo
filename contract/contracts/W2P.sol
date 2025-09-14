@@ -38,13 +38,17 @@ contract W2P {
 
     // ここから先がzk必要な部分
 
+    uint256[32] loanState;
+    uint256[32] loanExpired;
+
     struct LoanInfo {
-        uint id;
+        uint256 id;
         address borroweAddress;
         uint256 borrowedETH;
         uint256 repayLimit;
         bool isRepaid;
     }
+
     mapping(address => LoanInfo[]) LoanList;
 
     TestCircuitHonkVerifier verifier;
@@ -64,7 +68,15 @@ contract W2P {
         return isValid;
     }
 
-    function lend() external payable {}
+    function lend() external payable {
+        // loanStateとloanExpiredを送る
+        // 証明を検証する
+        // msg.senderにethcapを送る
+    }
 
-    function repay() external payable {}
+    function repay() external payable {
+        // loanStateを送る
+        // 証明を検証する
+        //
+    }
 }
