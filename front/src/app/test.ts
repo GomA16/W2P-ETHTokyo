@@ -15,7 +15,20 @@ function numberToUint8Array (num: number) {
     const uint8Array = new Uint8Array(buffer)
     return uint8Array;
 }
+function stringToUint8Array(input: string): Uint8Array {
+  // 1. 文字列をUTF-8のバイト配列にエンコードする
+  const encodedString = new TextEncoder().encode(input);
 
+  // 2. 32バイトのゼロで埋められた結果用の配列を作成する
+  const result = new Uint8Array(32);
+
+  // 3. エンコードしたデータを結果用配列の先頭からコピーする
+  //    - encodedStringが32バイトより短い場合、残りは0のまま（パディング）
+  //    - encodedStringが32バイトより長い場合、最初の32バイトだけがコピーされる（切り捨て）
+  result.set(encodedString.slice(0, 32));
+
+  return result;
+}
 async function testEthersECDSA() {
        const secretKey = new Uint8Array([
         207, 107, 198, 151, 157, 173, 219, 249,
@@ -28,11 +41,11 @@ async function testEthersECDSA() {
     const wallet = new ethers.Wallet(privateKey);
 
     const message = JSON.stringify( {
-    "name": "Bob",
-    "my_number" : "252525",
-    "income" : "120000",
-    "years_of_service" : "27",
-    "c_s" : "7ca4e6bf8f6a9f5ece85cd1ae1d3639420a20c03575cb704ecdd9381a91dc521"
+    "name": "Alice",
+    "my_number" : "551551",
+    "income" : "50000",
+    "years_of_service" : "8",
+    "c_s" : "0xa3b06691be5a1fbda2d6fccad608d4963a9ec070cdfbb13721c1f4e437b0aa39"
     }
 );
     const signature = await wallet.signMessage(message);
@@ -185,14 +198,57 @@ y: [
 
 }
 
+import Alice from "./test-data/Alice.json";
+import * as fs from 'fs';
+import * as path from 'path';
+
+async function genPi1PrivateInput() { 
+    const name = stringToUint8Array(Alice.message.name);
+    const s = numberToUint8Array(123456);
+    const baseId = keccak_256(new Uint8Array([...name, ...s]));
+    const repaid_k = numberToUint8Array(5);
+    const unpaid_k = [];
+    for (let i = 0; i < 32; i++) {
+        unpaid_k.push([numberToUint8Array(0), numberToUint8Array(0)]);
+    }
+    const k = numberToUint8Array(1);
+    let prv = new Uint8Array([...baseId, ...repaid_k]);
+    for (let i = 0; i < 32; i++) {
+        prv = new Uint8Array([...prv, ...unpaid_k[i][0]]);
+        prv = new Uint8Array([...prv, ...unpaid_k[i][1]]);
+    }
+    prv = new Uint8Array([...prv, ...k]);
+    console.log("private input:\n", prv);
+    const state_1 = keccak_256(prv);
+    console.log("state_k", state_1);
+    const loan_state = [];
+    loan_state.push(state_1);
+    for (let i = 0; i < 32; i++) {
+        loan_state.push(numberToUint8Array(0));
+    }
+    console.log("loans_state\n", loan_state);
+    
+    // 3. 保存先のファイルパスを定義
+    const filePath = path.join(__dirname, 'output.json');
+
+    try {
+    // 4. ファイルに同期的に書き込む
+    fs.writeFileSync(filePath, loan_state.toString(), 'utf-8');
+    console.log('File written successfully to:', filePath);
+    } catch (error) {
+    console.error('Error writing file:', error);
+    }
+}
 
 async function main () {
     // await genHash();
     // await testProof();
     // await genSignature();
     // await testEthersECDSA();
-    await testEthersECDSA();
-    await genKeccak();
+    // await testEthersECDSA();
+    // await genKeccak();
+    await genPi1PrivateInput();
 }
+
 
 main()

@@ -1,0 +1,11 @@
+{
+    "message" : {
+    "name": "Alice",
+    "my_number" : "551551",
+    "income" : "50000",
+    "years_of_service" : "8",
+    "c_s" : "0xa3b06691be5a1fbda2d6fccad608d4963a9ec070cdfbb13721c1f4e437b0aa39"
+    }, 
+    "sig" : "0xce978c7a9c4c35af9eb2c6aa0cb8ff28b2c0d5d0ad0ba1ef9b4261a5f7f301a226a88138cffc9c539abbfbde1bd58a60c8f5c13cf9bac0fb505b2484344fac1e1b",
+    "cbPk": "0x04fef325daab1c254678a592034c2c34543618b83da8e1fd3f55c0c7b54148e45e8663fa8e6eef1874e587d0a7cb401c15d7fd4cd13e847251842b707265dd33ff"
+}

@@ -102,6 +102,17 @@ function numberToUint8Array(num) {
     var uint8Array = new Uint8Array(buffer);
     return uint8Array;
 }
+function stringToUint8Array(input) {
+    // 1. 文字列をUTF-8のバイト配列にエンコードする
+    var encodedString = new TextEncoder().encode(input);
+    // 2. 32バイトのゼロで埋められた結果用の配列を作成する
+    var result = new Uint8Array(32);
+    // 3. エンコードしたデータを結果用配列の先頭からコピーする
+    //    - encodedStringが32バイトより短い場合、残りは0のまま（パディング）
+    //    - encodedStringが32バイトより長い場合、最初の32バイトだけがコピーされる（切り捨て）
+    result.set(encodedString.slice(0, 32));
+    return result;
+}
 function testEthersECDSA() {
     return __awaiter(this, void 0, void 0, function () {
         var secretKey, privateKey, wallet, message, signature;
@@ -117,11 +128,11 @@ function testEthersECDSA() {
                     privateKey = "0x" + (0, utils_1.bytesToHex)(secretKey);
                     wallet = new ethers_1.ethers.Wallet(privateKey);
                     message = JSON.stringify({
-                        "name": "Bob",
-                        "my_number": "252525",
-                        "income": "120000",
-                        "years_of_service": "27",
-                        "c_s": "7ca4e6bf8f6a9f5ece85cd1ae1d3639420a20c03575cb704ecdd9381a91dc521"
+                        "name": "Alice",
+                        "my_number": "551551",
+                        "income": "50000",
+                        "years_of_service": "8",
+                        "c_s": "0xa3b06691be5a1fbda2d6fccad608d4963a9ec070cdfbb13721c1f4e437b0aa39"
                     });
                     return [4 /*yield*/, wallet.signMessage(message)];
                 case 1:
@@ -286,6 +297,50 @@ function testProof() {
         });
     });
 }
+var Alice_json_1 = __importDefault(require("./test-data/Alice.json"));
+var fs = __importStar(require("fs"));
+var path = __importStar(require("path"));
+function genPi1PrivateInput() {
+    return __awaiter(this, void 0, void 0, function () {
+        var name, s, baseId, repaid_k, unpaid_k, i, k, prv, i, state_1, loan_state, i, filePath;
+        return __generator(this, function (_a) {
+            name = stringToUint8Array(Alice_json_1.default.message.name);
+            s = numberToUint8Array(123456);
+            baseId = (0, sha3_1.keccak_256)(new Uint8Array(__spreadArray(__spreadArray([], __read(name), false), __read(s), false)));
+            repaid_k = numberToUint8Array(5);
+            unpaid_k = [];
+            for (i = 0; i < 32; i++) {
+                unpaid_k.push([numberToUint8Array(0), numberToUint8Array(0)]);
+            }
+            k = numberToUint8Array(1);
+            prv = new Uint8Array(__spreadArray(__spreadArray([], __read(baseId), false), __read(repaid_k), false));
+            for (i = 0; i < 32; i++) {
+                prv = new Uint8Array(__spreadArray(__spreadArray([], __read(prv), false), __read(unpaid_k[i][0]), false));
+                prv = new Uint8Array(__spreadArray(__spreadArray([], __read(prv), false), __read(unpaid_k[i][1]), false));
+            }
+            prv = new Uint8Array(__spreadArray(__spreadArray([], __read(prv), false), __read(k), false));
+            console.log("private input:\n", prv);
+            state_1 = (0, sha3_1.keccak_256)(prv);
+            console.log("state_k", state_1);
+            loan_state = [];
+            loan_state.push(state_1);
+            for (i = 0; i < 32; i++) {
+                loan_state.push(numberToUint8Array(0));
+            }
+            console.log("loans_state\n", loan_state);
+            filePath = path.join(__dirname, 'output.json');
+            try {
+                // 4. ファイルに同期的に書き込む
+                fs.writeFileSync(filePath, loan_state.toString(), 'utf-8');
+                console.log('File written successfully to:', filePath);
+            }
+            catch (error) {
+                console.error('Error writing file:', error);
+            }
+            return [2 /*return*/];
+        });
+    });
+}
 function main() {
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
@@ -295,15 +350,16 @@ function main() {
                 // await testProof();
                 // await genSignature();
                 // await testEthersECDSA();
-                return [4 /*yield*/, testEthersECDSA()];
+                // await testEthersECDSA();
+                // await genKeccak();
+                return [4 /*yield*/, genPi1PrivateInput()];
                 case 1:
                     // await genHash();
                     // await testProof();
                     // await genSignature();
                     // await testEthersECDSA();
-                    _a.sent();
-                    return [4 /*yield*/, genKeccak()];
-                case 2:
+                    // await testEthersECDSA();
+                    // await genKeccak();
                     _a.sent();
                     return [2 /*return*/];
             }
