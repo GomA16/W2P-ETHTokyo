@@ -27,5 +27,6 @@ bb prove -b ./target/<プロジェクト名>.json -w ./target/<プロジェク�
 ```
 
 ```
- tsc test.ts --resolveJsonModule --esModuleInterop --skipLibCheck --downleveliteration; node test.js
+npm install @noble/hashes @noble/secp256k1 ethers
+tsc test.ts --resolveJsonModule --esModuleInterop --skipLibCheck --downleveliteration; node test.js
 ```
