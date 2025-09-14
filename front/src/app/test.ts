@@ -49,6 +49,7 @@ async function testEthersECDSA() {
   const rBytes = ethers.getBytes(sig.r);
   const sBytes = ethers.getBytes(sig.s);
     const signatureForNoir = new Uint8Array([...rBytes, ...sBytes]);
+    console.log("signatureFOrNoir", signatureForNoir);
     
     console.log("wallet address", wallet.signingKey.publicKey);
     const publicKey = hexToBytes(wallet.signingKey.publicKey.slice(2));
@@ -100,6 +101,13 @@ async function genHash () {
     console.log("y",y)
 }
 
+async function genKeccak () {
+    const x = numberToUint8Array(123456);
+    console.log("x:",x);
+    const y = keccak_256(x);
+    console.log("y",y)
+}
+
 async function testProof () {
     const noir = new Noir(testCircuit as any);
     const backend = new UltraHonkBackend(testCircuit.bytecode);
@@ -126,7 +134,8 @@ async function main () {
     // await genHash();
     // await testProof();
     // await genSignature();
-    await testEthersECDSA();
+    // await testEthersECDSA();
+    await genKeccak();
 }
 
 main()

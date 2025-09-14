@@ -132,6 +132,7 @@ function testEthersECDSA() {
                     rBytes = ethers_1.ethers.getBytes(sig.r);
                     sBytes = ethers_1.ethers.getBytes(sig.s);
                     signatureForNoir = new Uint8Array(__spreadArray(__spreadArray([], __read(rBytes), false), __read(sBytes), false));
+                    console.log("signatureFOrNoir", signatureForNoir);
                     console.log("wallet address", wallet.signingKey.publicKey);
                     publicKey = (0, utils_1.hexToBytes)(wallet.signingKey.publicKey.slice(2));
                     console.log("publicKey", publicKey);
@@ -196,6 +197,18 @@ function genHash() {
         });
     });
 }
+function genKeccak() {
+    return __awaiter(this, void 0, void 0, function () {
+        var x, y;
+        return __generator(this, function (_a) {
+            x = numberToUint8Array(123456);
+            console.log("x:", x);
+            y = (0, sha3_1.keccak_256)(x);
+            console.log("y", y);
+            return [2 /*return*/];
+        });
+    });
+}
 function testProof() {
     return __awaiter(this, void 0, void 0, function () {
         var noir, backend, witness, proof;
@@ -236,11 +249,13 @@ function main() {
                 // await genHash();
                 // await testProof();
                 // await genSignature();
-                return [4 /*yield*/, testEthersECDSA()];
+                // await testEthersECDSA();
+                return [4 /*yield*/, genKeccak()];
                 case 1:
                     // await genHash();
                     // await testProof();
                     // await genSignature();
+                    // await testEthersECDSA();
                     _a.sent();
                     return [2 /*return*/];
             }

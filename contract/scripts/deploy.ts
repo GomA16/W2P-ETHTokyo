@@ -7,19 +7,23 @@ async function main (){
     const proofBytes: BytesLike = proofData.proofHex;
     const proofInputs: BytesLike[] = proofData.proofInput;
     
-    const w2pFactory = await ethers.getContractFactory("W2P");
-    const w2p = await w2pFactory.deploy();
-    await w2p.waitForDeployment();
-    const tx = await w2p.check(proofBytes, proofInputs);
-    console.log("proof is", tx ? "valid": "invalid");
-    // const honkFactory = await ethers.getContractFactory("TestCircuitHonkVerifier");
-    // const honkVerifier = await honkFactory.deploy();
-    // await honkVerifier.waitForDeployment()
-
-    // const tx = await honkVerifier.verify(proofBytes
-    //     ,proofInputs
-    // );
+    // const w2pFactory = await ethers.getContractFactory("W2P");
+    // const w2p = await w2pFactory.deploy();
+    // await w2p.waitForDeployment();
+    // const tx = await w2p.check(proofBytes, proofInputs);
     // console.log("proof is", tx ? "valid": "invalid");
+    const honkFactory = await ethers.getContractFactory("TestCircuitHonkVerifier");
+    const honkVerifier = await honkFactory.deploy();
+    await honkVerifier.waitForDeployment()
+
+    console.log("proofBytes\n", proofBytes);
+    console.log("proofData\n", proofInputs)
+    console.log("type of proofBytes", typeof proofData.proofHex);
+    console.log("type of proofInputs", typeof proofData.proofInput);
+    const tx = await honkVerifier.verify(proofBytes
+        ,proofInputs
+    );
+    console.log("proof is", tx ? "valid": "invalid");
 }
 
 main()
