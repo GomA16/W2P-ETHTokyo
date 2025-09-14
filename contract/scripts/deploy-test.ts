@@ -20,7 +20,7 @@ async function main() {
 
         console.log("proof.proof", proof.proof);
         // console.log("poof.publicInput", proof.publicInputs);
-        const isValid = await backend.verifyProof(proof);
+        const isValid = await backend.verifyProof(proof, { keccak:true });
         console.log("isValid:", isValid);
 
         const proofBytes = "0x" + bytesToHex(proof.proof);

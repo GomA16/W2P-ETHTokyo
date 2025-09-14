@@ -99,6 +99,7 @@ async function main() {
             this.ethCap -= amount;
             this.k = kNext;
             this.state = stateNext;
+            this.loanId = loanIdNext;
             // レシートがnullでないことを確認 (TypeScriptの型安全のため)
             if (!receipt) {
                 console.error("Transaction failed, no receipt");
@@ -147,6 +148,7 @@ async function main() {
             this.ethCap += amount;
             this.k = kNext;
             this.state = stateNext;
+            this.loanId = loanIdNext;
 
             // レシートがnullでないことを確認 (TypeScriptの型安全のため)
             if (!receipt) {
